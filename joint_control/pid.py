@@ -35,9 +35,9 @@ class PIDController(object):
         self.e2 = np.zeros(size)
         # ADJUST PARAMETERS BELOW
         delay = 0
-        self.Kp = 0
-        self.Ki = 0
-        self.Kd = 0
+        self.Kp = 32
+        self.Ki = 0.3
+        self.Kd = 0.1
         self.y = deque(np.zeros(size), maxlen=delay + 1)
 
     def set_delay(self, delay):
@@ -53,9 +53,14 @@ class PIDController(object):
         @return control signal
         '''
         # YOUR CODE HERE
+        e = target - sensor
+        self.e1 = e
+        self.e2 = self.e1
+        self.u = self.u + (self.Kp + self.Ki * self.dt + self.Kd / self.dt) * e - (self.Kp +(2 * self.Kd) / self.dt) * self.e1 + (self.Kd / self.dt) * self.e2
+        predict = self.u + ((self.u - sensor) + (self.y.popleft() - sensor)) / (2 * self.dt) * self.dt
+        self.y.append(predict)
 
         return self.u
-
 
 class PIDAgent(SparkAgent):
     def __init__(self, simspark_ip='localhost',
@@ -76,7 +81,7 @@ class PIDAgent(SparkAgent):
         self.target_joints: target positions (dict: joint_id -> position (target)) '''
         joint_angles = np.asarray(
             [perception.joint[joint_id]  for joint_id in JOINT_CMD_NAMES])
-        target_angles = np.asarray([self.target_joints.get(joint_id, 
+        target_angles = np.asarray([self.target_joints.get(joint_id,
             perception.joint[joint_id]) for joint_id in JOINT_CMD_NAMES])
         u = self.joint_controller.control(target_angles, joint_angles)
         action.speed = dict(zip(JOINT_CMD_NAMES.keys(), u))  # dict: joint_id -> speed
@@ -86,4 +91,5 @@ class PIDAgent(SparkAgent):
 if __name__ == '__main__':
     agent = PIDAgent()
     agent.target_joints['HeadYaw'] = 1.0
+    agent.target_joints['LShoulderPitch'] = 1.0
     agent.run()
