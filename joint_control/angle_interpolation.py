@@ -21,8 +21,7 @@
 
 
 from pid import PIDAgent
-from keyframes import leftBackToStand
-
+from keyframes import rightBellyToStand
 
 class AngleInterpolationAgent(PIDAgent):
     def __init__(self, simspark_ip='localhost',
@@ -53,9 +52,11 @@ class AngleInterpolationAgent(PIDAgent):
             self.startTime = perception.time
         adjustedTime = perception.time - self.startTime
 
-        names, times, keys = keyframes
-
+        names = keyframes[0]
+        times = keyframes[1]
+        keys = keyframes[2]
         finishJoint = 0
+
         for(i, name) in enumerate(names):
 
             if(times[i][-1] < adjustedTime):
@@ -63,7 +64,6 @@ class AngleInterpolationAgent(PIDAgent):
                 if(finishJoint == len(names)):
                     self.started = False
                     self.keyframes = ([],[],[])
-                    break
                 continue
 
             jointTimes = -1
@@ -83,17 +83,17 @@ class AngleInterpolationAgent(PIDAgent):
             elif(jointTimes == 0):
                 p0 = 0
                 p1 = 0
-                p3 = keys[i][jointTimes][0] #maybe change p2 and p3 here
-                p2 = p3 + keys[i][jointTimes][1][2]
+                p2 = keys[i][jointTimes][0] #maybe change p2 and p3 here
+                p3 = p2 + keys[i][jointTimes][1][2]
 
 
             else:
                 p0 = keys[i][jointTimes-1][0]
                 p1 = p0 + keys[i][jointTimes-1][1][2]
-                p3 = keys[i][jointTimes][0]
-                p2 = p3 + keys[i][jointTimes][1][2]
+                p2 = keys[i][jointTimes][0]
+                p3 = p2 + keys[i][jointTimes][1][2]
 
-            angle = ((1 - t) ** 3) * p0 + 3 * t * ((1 - t) ** 2) * p1 + 3 * (t ** 2) * (1 - t) * p2 + (t ** 3) * p3
+            angle = ((1 - t)**3)*p0 + 3*t*((1 - t)**2)*p1 + 3*(t**2)*(1 - t)*p2 + (t**3)*p3
 
             target_joints[name] = angle
             if(name == "LHipYawPitch"):
@@ -104,5 +104,5 @@ class AngleInterpolationAgent(PIDAgent):
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
-    agent.keyframes = leftBackToStand()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = rightBellyToStand()  # CHANGE DIFFERENT KEYFRAMES
     agent.run()
