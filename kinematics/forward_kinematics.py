@@ -95,11 +95,12 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
             s_45 = np.sin(np.pi/4)
             c_45 = np.cos(np.pi/4)
 
+            # roll leg till before first rotation
             tmp_matrix = np.array([[1, 0, 0, 0], [0, c_45, -s_45, 0], [0, s_45, c_45, 0], [0, 0, 0, 1]])
             z = np.array([[c, s, 0, 0], [-s, c, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
 
             # tilt leg again after applying rotation
-            # use inverse rotation (transposed matrix) for other leg (due to symmetry)
+            # use inverse rotation (transposed matrix) for other leg
             if (joint_name == 'LHipYawPitch'):
                 T = np.dot(T, tmp_matrix)
                 T = np.dot(T, z)
